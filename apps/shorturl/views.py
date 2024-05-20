@@ -32,6 +32,12 @@ class ShortURLViewSet(viewsets.ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        if instance.expired_at:
+            serializer = self.get_serializer(instance)
+            serializer.validate_expired(instance.expired_at)
+            serializer.delete_expired_url()
+
         instance.count += 1
         instance.save()
         redirect_url = instance.url

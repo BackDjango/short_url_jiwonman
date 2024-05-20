@@ -16,7 +16,10 @@ class ShortURLSerializer(serializers.ModelSerializer):
     def validate_expired(self, value):
         if value and value < datetime.now():
             raise serializers.ValidationError("만료일시는 현재 날짜보다 늦어야 합니다.")
-        return value
+        
+    def delete_expired_url(self):
+        instance = self.instance
+        instance.delete()
     
     def create(self, validated_data):
         url = validated_data['url']
