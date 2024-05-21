@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.shorturl.models import ShortURL
@@ -14,7 +14,7 @@ class ShortURLSerializer(serializers.ModelSerializer):
         fields = ["url", "expired_at", "deleted_at", "count"]
 
     def validate_expired(self, value):
-        if value and value < datetime.now():
+        if value and value < timezone.now():
             raise serializers.ValidationError("만료일시는 현재 날짜보다 늦어야 합니다.")
         
     def delete_expired_url(self):
