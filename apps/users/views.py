@@ -13,6 +13,7 @@ from apps.users.serializers import (
     LoginSerializer,
 )
 
+
 class SignUpAPIView(APIView):
     @extend_schema(
         tags=["Auth"],
@@ -44,11 +45,7 @@ class LoginAPIView(APIView):
 class SingOutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(
-        tags=["Auth"],
-        summary="회원탈퇴",
-        request=EmptySerializer
-    )
+    @extend_schema(tags=["Auth"], summary="회원탈퇴", request=EmptySerializer)
     def delete(self, request: Request) -> Response:
         request.user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -57,11 +54,7 @@ class SingOutAPIView(APIView):
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(
-        tags=["Auth"],
-        summary="로그아웃",
-        request=EmptySerializer
-    )
+    @extend_schema(tags=["Auth"], summary="로그아웃", request=EmptySerializer)
     def get(self, request: Request) -> Response:
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

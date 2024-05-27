@@ -2,6 +2,7 @@ from django.db import models
 
 from commons.models import BaseModel
 
+
 class ShortURL(BaseModel):
     key = models.CharField(max_length=6, primary_key=True)
     url = models.URLField(unique=True)

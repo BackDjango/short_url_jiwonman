@@ -16,22 +16,22 @@ class ShortURLSerializer(serializers.ModelSerializer):
     def validate_expired(self, value):
         if value and value < timezone.now():
             raise serializers.ValidationError("만료일시는 현재 날짜보다 늦어야 합니다.")
-        
+
     def delete_expired_url(self):
         instance = self.instance
         instance.delete()
-    
+
     def create(self, validated_data):
-        url = validated_data['url']
+        url = validated_data["url"]
 
         exist_url = ShortURL.objects.filter(url=url).first()
         if exist_url:
             return {"key": exist_url.key}
 
         key = self.generate_key()
-        validated_data['key'] = key
+        validated_data["key"] = key
         return super().create(validated_data)
-    
+
     def generate_key(self):
         base62 = Base62()
         while True:

@@ -9,6 +9,7 @@ from apps.shorturl.models import ShortURL
 from apps.shorturl.serializers import ShortURLSerializer
 from commons.utils import Base62
 
+
 @extend_schema(
     tags=["URL"],
 )
@@ -26,7 +27,7 @@ class ShortURLViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         key = instance["key"]
         return Response({"key": key}, status=status.HTTP_201_CREATED)
-    
+
     @extend_schema(
         summary="URL Redirect",
     )
