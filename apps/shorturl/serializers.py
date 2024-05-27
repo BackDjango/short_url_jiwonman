@@ -1,4 +1,6 @@
+from datetime import timedelta
 from django.utils import timezone
+
 from rest_framework import serializers
 
 from apps.shorturl.models import ShortURL
@@ -8,14 +10,18 @@ from commons.utils import Base62
 class ShortURLSerializer(serializers.ModelSerializer):
     url = serializers.URLField(required=True, write_only=True)
     expired_at = serializers.DateTimeField(required=False, write_only=True)
+    daily_count = serializers.JSONField(read_only=True)
+    referrer_count = serializers.JSONField(read_only=True)
+
 
     class Meta:
         model = ShortURL
-        fields = ["url", "expired_at", "deleted_at", "count"]
+        fields = ["url", "expired_at", "count", "daily_count", "referrer_count"]
 
     def validate_expired(self, value):
         if value and value < timezone.now():
-            raise serializers.ValidationError("만료일시는 현재 날짜보다 늦어야 합니다.")
+            raise serializers.ValidationError("URL이 만료되었습니다.")
+        return value
 
     def delete_expired_url(self):
         instance = self.instance
@@ -26,7 +32,7 @@ class ShortURLSerializer(serializers.ModelSerializer):
 
         exist_url = ShortURL.objects.filter(url=url).first()
         if exist_url:
-            return {"key": exist_url.key}
+            return exist_url
 
         key = self.generate_key()
         validated_data["key"] = key
@@ -38,3 +44,32 @@ class ShortURLSerializer(serializers.ModelSerializer):
             key = base62.encode()
             if not ShortURL.objects.filter(key=key).exists():
                 return key
+            
+    def increase_count(self, instance, referrer):
+        self.increase_daily_count(instance)
+        self.increase_referrer_count(instance, referrer)
+        instance.count += 1
+        instance.save()
+        return instance
+    
+    def increase_daily_count(self, instance):
+        # isoformat -> 'YYYY-MM-DD'
+        today = timezone.now().date().isoformat()
+        daily_count = instance.daily_count
+        daily_count[today] = daily_count.get(today, 0) + 1
+
+    def increase_referrer_count(self, instance, referrer):
+        referrer_count = instance.referrer_count
+        referrer_count[referrer] = referrer_count.get(referrer, 0) + 1
+        instance.referrer_count = referrer_count
+
+    def get_weekly_count(self, instance):
+        today = timezone.now().date()
+        seven_days = today - timedelta(days=7)
+        result = {}
+        
+        for day in instance.daily_count:
+            if day >= seven_days.isoformat():
+                result[day] = instance.daily_count.get(day, 0) 
+
+        return result
