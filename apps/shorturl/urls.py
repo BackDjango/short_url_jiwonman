@@ -25,5 +25,5 @@ short_url_referrer = views.ShortURLViewSet.as_view(
 urlpatterns = [
     path("", short_url_list),
     path("<str:pk>/", short_url_detail),
-    path("<str:pk>/\\+/", short_url_referrer)
+    path("<str:pk>/+/", short_url_referrer)
 ]

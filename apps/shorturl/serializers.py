@@ -8,20 +8,30 @@ from commons.utils import Base62
 
 
 class ShortURLSerializer(serializers.ModelSerializer):
-    url = serializers.URLField(required=True, write_only=True)
-    expired_at = serializers.DateTimeField(required=False, write_only=True)
+    url = serializers.URLField(required=True)
+    expired_at = serializers.DateTimeField(required=False)
     daily_count = serializers.JSONField(read_only=True)
     referrer_count = serializers.JSONField(read_only=True)
+    key = serializers.CharField(read_only=True)
 
 
     class Meta:
         model = ShortURL
-        fields = ["url", "expired_at", "count", "daily_count", "referrer_count"]
+        fields = ["url", "expired_at", "count", "daily_count", "referrer_count", "key"]
 
     def validate_expired(self, value):
         if value and value < timezone.now():
             raise serializers.ValidationError("URL이 만료되었습니다.")
         return value
+    
+    def validate(self, attrs):
+        return super().validate(attrs)
+    
+    # def validate(self, data):
+    #     expired_at = data.get("expired_at")
+    #     if expired_at:
+    #         self.validate_expired(expired_at)
+    #     return data
 
     def delete_expired_url(self):
         instance = self.instance
@@ -36,7 +46,8 @@ class ShortURLSerializer(serializers.ModelSerializer):
 
         key = self.generate_key()
         validated_data["key"] = key
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        return instance
 
     def generate_key(self):
         base62 = Base62()

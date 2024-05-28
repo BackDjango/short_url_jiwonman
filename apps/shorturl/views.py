@@ -21,6 +21,12 @@ class ShortURLViewSet(viewsets.ModelViewSet):
     serializer_class = ShortURLSerializer
 
     @extend_schema(
+        summary="전체 URL 조회"
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
         summary="단축 URL 생성",
     )
     def create(self, request):
@@ -28,9 +34,7 @@ class ShortURLViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        key = instance.key
-        
-        return Response({"key": key}, status=status.HTTP_201_CREATED)
+        return Response({"key": instance.key}, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         summary="URL Redirect",
@@ -43,7 +47,8 @@ class ShortURLViewSet(viewsets.ModelViewSet):
 
         if instance.expired_at:
             serializer.validate_expired(instance.expired_at)
-            serializer.delete_expired_url()
+            instance.delete()
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         serializer.increase_count(instance, referrer)
         redirect_url = instance.url
